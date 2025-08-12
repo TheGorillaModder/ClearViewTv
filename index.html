@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearViewTv</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row items-center justify-between bg-gray-900 p-4 rounded-lg shadow-xl sticky top-4 z-50">
+        <div class="flex items-center space-x-4 mb-4 md:mb-0 w-full md:w-auto justify-between">
+            <h1 class="text-3xl font-bold text-red-500">ClearViewTv</h1>
+            <div id="user-profile-btn" class="hidden md:hidden">
+                <button id="profile-button" class="bg-gray-800 rounded-full w-10 h-10 flex items-center justify-center text-xl hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex items-center w-full md:w-1/2 space-x-2">
+            <input type="text" id="search-input" placeholder="Search for videos..." class="w-full p-2 rounded-lg bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <button id="search-button" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </div>
+        <div class="flex items-center space-x-4 mt-4 md:mt-0">
+            <button id="upload-button" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">Upload Video</button>
+            <div id="user-auth-area" class="flex space-x-2 items-center">
+                <button id="login-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">Login</button>
+                <div id="user-profile-info" class="hidden flex items-center space-x-2">
+                    <span id="user-name" class="font-semibold"></span>
+                    <button id="logout-button" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="mt-8">
+        <!-- This is where the home page content or video player will be rendered -->
+        <h2 id="content-title" class="text-2xl font-bold mb-4 text-white">Suggested Videos</h2>
+        <p class="text-sm text-gray-500">Your user ID for collaboration is: <span id="user-id">Not logged in</span></p>
+        <div id="video-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
+            <!-- Video cards will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Video Upload Modal -->
+    <div id="upload-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-11/12 md:w-1/2 relative">
+            <h3 class="text-2xl font-bold mb-4 text-white">Upload a New Video</h3>
+            <button id="close-upload-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
+            <form id="upload-form" class="space-y-4">
+                <input type="text" id="video-title" placeholder="Video Title" required class="w-full p-2 rounded-lg bg-gray-900 text-white">
+                <textarea id="video-description" placeholder="Video Description" required class="w-full p-2 rounded-lg bg-gray-900 text-white"></textarea>
+                <input type="text" id="video-tags" placeholder="Tags (comma-separated, e.g., gaming, tutorial, vlog)" required class="w-full p-2 rounded-lg bg-gray-900 text-white">
+                <label class="block text-white">Video File (.mp4, .mov)</label>
+                <input type="file" id="video-file" accept=".mp4,.mov" required class="w-full p-2 rounded-lg bg-gray-900 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                <label class="block text-white">Thumbnail Image</label>
+                <input type="file" id="thumbnail-file" accept="image/*" required class="w-full p-2 rounded-lg bg-gray-900 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                <button type="submit" id="upload-submit-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors duration-200">Upload</button>
+            </form>
+            <p id="upload-status" class="mt-4 text-center"></p>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-11/12 md:w-1/3 relative">
+            <h3 class="text-2xl font-bold mb-4 text-white">Login to ClearViewTv</h3>
+            <button id="close-login-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
+            <button id="google-login-button" class="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg transition-colors duration-200 font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="h-6 w-6"><path fill="#FFC107" d="M12.9 24.5l-6.8-5.3c-.6 1.2-1 2.5-1 3.9s.4 2.7 1 3.9l6.8-5.3zm-1.1 1.7l1.1 1.1 5.3 6.8c1.3.8 2.7 1.2 4.1 1.2 1.3 0 2.6-.4 3.9-1.2l-5.3-6.8-1.1-1.1z"/><path fill="#4285F4" d="M24 10.5c3.2 0 6.1 1.2 8.3 3.3l4.6-4.6c-3.1-3.1-7.4-5.2-12.9-5.2-4.5 0-8.5 1.7-11.6 4.6l5.3 6.8c2.1-2 4.9-3.2 8.2-3.2z"/><path fill="#34A853" d="M41 24.5c0-1.4-.4-2.7-1-3.9l-6.8 5.3 6.8 5.3c.6-1.2 1-2.5 1-3.9z"/><path fill="#FBBC04" d="M24 37.5c-3.2 0-6.1-1.2-8.3-3.3l-4.6 4.6c3.1 3.1 7.4 5.2 12.9 5.2s10.3-2.1 13.4-5.2l-5.3-6.8c-2.1 2-4.9 3.2-8.2 3.2z"/></svg>
+                <span>Sign in with Google</span>
+            </button>
+            <p id="login-error-message" class="text-center text-red-400 mt-4 hidden">An error occurred. Please try again.</p>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, updateDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+
+        // Provided Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC83lz3sn_gR7FxB6bNy7Mn7NlH_CBZsrI",
+            authDomain: "clearviewtv-826cc.firebaseapp.com",
+            projectId: "clearviewtv-826cc",
+            storageBucket: "clearviewtv-826cc.firebasestorage.app",
+            messagingSenderId: "930735548409",
+            appId: "1:930735548409:web:378b938ab670223c50bf28",
+            measurementId: "G-PC2HWLB33F"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        
+        // Firestore data models and collection references
+        const videoCollection = collection(db, 'videos');
+        const commentCollection = collection(db, 'comments');
+        const usersCollection = collection(db, 'users');
+        
+        // Global variables and DOM elements
+        let currentUser = null;
+        let userId = null;
+        
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const uploadButton = document.getElementById('upload-button');
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        
+        const loginModal = document.getElementById('login-modal');
+        const uploadModal = document.getElementById('upload-modal');
+        const closeLoginModal = document.getElementById('close-login-modal');
+        const closeUploadModal = document.getElementById('close-upload-modal');
+        
+        const videoListContainer = document.getElementById('video-list');
+        const mainContent = document.getElementById('main-content');
+        const contentTitle = document.getElementById('content-title');
+        const userIdDisplay = document.getElementById('user-id');
+
+        // --- Authentication Logic ---
+        
+        // Use an auth state listener to update the UI
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in
+                currentUser = user;
+                userId = user.uid;
+                userIdDisplay.textContent = userId;
+                document.getElementById('user-auth-area').classList.add('hidden');
+                document.getElementById('user-profile-info').classList.remove('hidden');
+                document.getElementById('user-name').textContent = user.displayName || user.email;
+                uploadButton.classList.remove('hidden');
+
+                // Create or update the user document in Firestore
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (!userDoc.exists()) {
+                    await setDoc(userDocRef, {
+                        displayName: user.displayName,
+                        email: user.email,
+                        watchHistory: {}, // For recommendations
+                        createdAt: serverTimestamp()
+                    });
+                }
+                
+                // Load personalized recommendations
+                fetchRecommendedVideos();
+            } else {
+                // User is signed out
+                currentUser = null;
+                userId = 'Not logged in';
+                userIdDisplay.textContent = 'Not logged in';
+                document.getElementById('user-auth-area').classList.remove('hidden');
+                document.getElementById('user-profile-info').classList.add('hidden');
+                uploadButton.classList.add('hidden');
+                
+                // Show a generic list of videos for non-logged-in users
+                fetchGenericVideos();
+            }
+        });
+        
+        // Sign in anonymously to enable Firestore access for non-logged-in users
+        async function signInAnonymouslyIfNotAuthenticated() {
+            if (!auth.currentUser) {
+                try {
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Anonymous sign-in failed", error);
+                }
+            }
+        }
+        
+        // Call this on page load to ensure Firestore is usable
+        signInAnonymouslyIfNotAuthenticated();
+
+
+        // Event listeners for auth and modals
+        loginButton.addEventListener('click', () => loginModal.classList.remove('hidden'));
+        closeLoginModal.addEventListener('click', () => loginModal.classList.add('hidden'));
+        uploadButton.addEventListener('click', () => uploadModal.classList.remove('hidden'));
+        closeUploadModal.addEventListener('click', () => uploadModal.classList.add('hidden'));
+        
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.reload(); // Reload the page to refresh UI
+            } catch (error) {
+                console.error("Logout failed:", error);
+            }
+        });
+
+        // Google Login
+        const googleLoginButton = document.getElementById('google-login-button');
+        googleLoginButton.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                loginModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Google login failed:", error);
+                document.getElementById('login-error-message').classList.remove('hidden');
+            }
+        });
+
+        // --- Video Upload Logic ---
+        const uploadForm = document.getElementById('upload-form');
+        const uploadStatus = document.getElementById('upload-status');
+        const uploadSubmitButton = document.getElementById('upload-submit-button');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) {
+                uploadStatus.textContent = 'You must be logged in to upload videos.';
+                uploadStatus.classList.add('text-red-400');
+                return;
+            }
+            
+            uploadSubmitButton.disabled = true;
+            uploadStatus.textContent = 'Uploading...';
+            uploadStatus.classList.add('text-yellow-400');
+
+            const title = document.getElementById('video-title').value;
+            const description = document.getElementById('video-description').value;
+            const tags = document.getElementById('video-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const videoFile = document.getElementById('video-file').files[0];
+            const thumbnailFile = document.getElementById('thumbnail-file').files[0];
+
+            if (!videoFile || !thumbnailFile) {
+                uploadStatus.textContent = 'Please select both a video and a thumbnail file.';
+                uploadStatus.classList.add('text-red-400');
+                uploadSubmitButton.disabled = false;
+                return;
+            }
+
+            try {
+                // Upload video to Firebase Storage
+                const videoRef = ref(storage, `videos/${userId}/${Date.now()}_${videoFile.name}`);
+                await uploadBytes(videoRef, videoFile);
+                const videoUrl = await getDownloadURL(videoRef);
+                
+                // Upload thumbnail to Firebase Storage
+                const thumbnailRef = ref(storage, `thumbnails/${userId}/${Date.now()}_${thumbnailFile.name}`);
+                await uploadBytes(thumbnailRef, thumbnailFile);
+                const thumbnailUrl = await getDownloadURL(thumbnailRef);
+                
+                // Save video metadata to Firestore
+                await setDoc(doc(videoCollection), {
+                    title,
+                    description,
+                    tags,
+                    uploaderId: userId,
+                    uploaderName: currentUser.displayName || currentUser.email,
+                    videoUrl,
+                    thumbnailUrl,
+                    views: 0,
+                    createdAt: serverTimestamp()
+                });
+                
+                uploadStatus.textContent = 'Video uploaded successfully!';
+                uploadStatus.classList.add('text-green-400');
+                uploadForm.reset();
+                uploadModal.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Error uploading video:", error);
+                uploadStatus.textContent = 'An error occurred during upload.';
+                uploadStatus.classList.add('text-red-400');
+            } finally {
+                uploadSubmitButton.disabled = false;
+            }
+        });
+
+        // --- Video Display and Recommendation Logic ---
+        
+        async function fetchVideos(queryOptions = {}) {
+            let q = query(videoCollection);
+
+            // Apply search query if it exists
+            if (queryOptions.searchQuery) {
+                const searchTerm = queryOptions.searchQuery.toLowerCase();
+                // A simple Firestore search for title, description, or tags
+                q = query(videoCollection, where('tags', 'array-contains', searchTerm));
+            }
+
+            try {
+                const querySnapshot = await getDocs(q);
+                displayVideos(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error fetching videos:", error);
+            }
+        }
+
+        async function fetchGenericVideos() {
+            contentTitle.textContent = 'Latest Videos';
+            fetchVideos();
+        }
+
+        async function fetchRecommendedVideos() {
+            if (!currentUser) {
+                fetchGenericVideos();
+                return;
+            }
+            
+            contentTitle.textContent = 'Suggested Videos for You';
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            const watchHistory = userDoc.data().watchHistory || {};
+            
+            const sortedTags = Object.entries(watchHistory).sort(([, a], [, b]) => b - a);
+            const topTags = sortedTags.slice(0, 5).map(([tag]) => tag);
+
+            if (topTags.length > 0) {
+                const q = query(videoCollection, where('tags', 'array-contains-any', topTags));
+                const querySnapshot = await getDocs(q);
+                displayVideos(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } else {
+                fetchGenericVideos(); // Fallback to generic videos if no history
+            }
+        }
+
+        function displayVideos(videos) {
+            videoListContainer.innerHTML = '';
+            if (videos.length === 0) {
+                videoListContainer.innerHTML = '<p class="text-center col-span-full text-gray-400">No videos found.</p>';
+                return;
+            }
+            videos.forEach(video => {
+                const videoCard = `
+                    <div class="video-card bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 cursor-pointer" data-video-id="${video.id}">
+                        <img src="${video.thumbnailUrl}" alt="${video.title}" class="video-thumbnail">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-white truncate">${video.title}</h3>
+                            <p class="text-sm text-gray-400 mt-1">${video.uploaderName}</p>
+                        </div>
+                    </div>
+                `;
+                videoListContainer.innerHTML += videoCard;
+            });
+
+            // Add event listeners to the new video cards
+            document.querySelectorAll('.video-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const videoId = card.dataset.videoId;
+                    renderVideoPlayer(videoId);
+                });
+            });
+        }
+        
+        // Initial video load
+        fetchGenericVideos();
+
+        // Search functionality
+        searchButton.addEventListener('click', () => {
+            const query = searchInput.value;
+            if (query) {
+                contentTitle.textContent = `Search results for "${query}"`;
+                fetchVideos({ searchQuery: query });
+            } else {
+                fetchGenericVideos();
+            }
+        });
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+        
+        // --- Video Player and Commenting Logic ---
+        
+        async function renderVideoPlayer(videoId) {
+            const videoDocRef = doc(db, 'videos', videoId);
+            const videoDoc = await getDoc(videoDocRef);
+            if (!videoDoc.exists()) {
+                mainContent.innerHTML = '<p class="text-center text-red-400">Video not found.</p>';
+                return;
+            }
+            const videoData = videoDoc.data();
+
+            // Increment views and update watch history for recommendations
+            await updateDoc(videoDocRef, {
+                views: (videoData.views || 0) + 1
+            });
+            
+            if (currentUser) {
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                const userDoc = await getDoc(userDocRef);
+                const watchHistory = userDoc.data().watchHistory || {};
+                videoData.tags.forEach(tag => {
+                    watchHistory[tag] = (watchHistory[tag] || 0) + 1;
+                });
+                await updateDoc(userDocRef, {
+                    watchHistory: watchHistory
+                });
+            }
+
+            // Render the video player and comments section
+            mainContent.innerHTML = `
+                <div class="w-full lg:w-3/4 mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-2xl p-4">
+                    <button id="back-to-home" class="mb-4 text-blue-400 hover:text-blue-200">&larr; Back to Home</button>
+                    <video id="video-player" src="${videoData.videoUrl}" controls class="w-full rounded-lg"></video>
+                    <div class="mt-4">
+                        <h1 class="text-3xl font-bold text-white">${videoData.title}</h1>
+                        <p class="text-sm text-gray-400">by ${videoData.uploaderName} • ${videoData.views || 0} views</p>
+                        <p class="mt-2 text-gray-300">${videoData.description}</p>
+                        <div class="mt-2 text-gray-500 text-sm">
+                            Tags: ${videoData.tags.map(tag => `<span class="bg-gray-700 rounded-full px-2 py-1 mr-2">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div id="comments-section" class="mt-8">
+                        <h3 class="text-xl font-bold text-white mb-4">Comments</h3>
+                        <form id="comment-form" class="flex items-center space-x-2 mb-6">
+                            <input type="text" id="comment-input" placeholder="Add a comment..." class="w-full p-2 rounded-lg bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500" ${!currentUser ? 'disabled' : ''}>
+                            <button type="submit" id="post-comment-button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200" ${!currentUser ? 'disabled' : ''}>Post</button>
+                        </form>
+                        <div id="comments-list" class="space-y-4">
+                            <!-- Comments will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Back button functionality
+            document.getElementById('back-to-home').addEventListener('click', () => {
+                window.location.reload(); // Simple way to go back to the home view
+            });
+            
+            // Add comment submission logic
+            const commentForm = document.getElementById('comment-form');
+            commentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentUser) return; // Should be disabled, but good practice to check
+                
+                const commentText = document.getElementById('comment-input').value;
+                if (commentText.trim() === '') return;
+                
+                try {
+                    await addDoc(commentCollection, {
+                        videoId: videoId,
+                        userId: currentUser.uid,
+                        userName: currentUser.displayName || currentUser.email,
+                        commentText: commentText,
+                        createdAt: serverTimestamp()
+                    });
+                    document.getElementById('comment-input').value = ''; // Clear input
+                } catch (error) {
+                    console.error("Error adding comment:", error);
+                }
+            });
+            
+            // Real-time comments listener
+            const commentsList = document.getElementById('comments-list');
+            const q = query(commentCollection, where('videoId', '==', videoId));
+            onSnapshot(q, (querySnapshot) => {
+                commentsList.innerHTML = '';
+                if (querySnapshot.empty) {
+                    commentsList.innerHTML = '<p class="text-gray-400 text-sm">No comments yet. Be the first!</p>';
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        const comment = doc.data();
+                        const commentElement = document.createElement('div');
+                        commentElement.className = 'bg-gray-800 p-3 rounded-lg';
+                        commentElement.innerHTML = `
+                            <p class="text-sm font-semibold text-white">${comment.userName}</p>
+                            <p class="text-gray-300 mt-1">${comment.commentText}</p>
+                        `;
+                        commentsList.appendChild(commentElement);
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
